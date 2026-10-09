@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>RedMudAI · Water Recovery Lab</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<main>
+<header><span class="eyebrow">MINING FELLOWSHIP · CONCEPT DEMONSTRATOR</span><h1>RedMudAI <span>Water Recovery Lab</span></h1><p>Explore filtration scenarios. See where water goes. Compare recovery and energy tradeoffs.</p><span class="badge">Transparent equations · No trained AI</span></header>
+<div class="notice"><strong>Illustrative / unvalidated.</strong> All results are modeled estimates using invented parameters. No industrial performance claims or operating recommendations.</div>
+<div class="layout"><aside class="card"><h2>Set up your batch</h2><p class="muted">Change an input to update the model.</p>
+<label for="solids">Solids concentration <output id="solids-value">30% by mass</output></label><input id="solids" type="range" min="5" max="60" value="30">
+<label for="quantity">Slurry quantity (kg)</label><input id="quantity" type="number" min="1" max="100000" value="1000" step="1">
+<label for="pressure">Filtration pressure <output id="pressure-value">3 bar</output></label><input id="pressure" type="range" min="0.5" max="10" value="3" step="0.5">
+<label for="time">Filtration time <output id="time-value">30 min</output></label><input id="time" type="range" min="1" max="120" value="30">
+<label for="goal">Optimization goal</label><select id="goal"><option>Balanced</option><option>Max recovery</option><option>Min energy</option></select>
+<button id="reset" class="secondary">Reset demo</button><p id="error" role="alert"></p>
+<p class="muted">Grid search: 0.5–10 bar, every 0.5 bar; 5–120 minutes, every 5 minutes.</p></aside>
+<section><h2>Your batch <small>Modeled estimates</small></h2><div id="metrics" class="metrics" aria-live="polite"></div>
+<p class="muted">Recovery is a percentage of initial water. Cake moisture is a percentage of wet cake mass. Energy includes assumed hydraulic work and auxiliary electricity.</p>
+<article class="card recommendation"><span class="eyebrow">ILLUSTRATIVE GRID OPTIMUM</span><h2 id="opt-title"></h2><div id="optimum" class="metrics"></div><p id="goal-description" class="muted"></p></article>
+<div class="graphs"><article class="card"><h3>Recovery over time</h3><p class="muted">Illustrative curve at your selected pressure. Hover or tap points.</p><div id="curve"></div></article><article class="card"><h3>Recovery–energy tradeoff</h3><p class="muted">480 modeled scenarios. Coral star marks the selected goal.</p><div id="tradeoff"></div></article></div>
+<article class="card"><h3>Every kilogram accounted for</h3><div id="balance"></div><p id="balance-text"></p></article>
+<button id="download">Download modeled results</button>
+</section></div>
+<details class="card"><summary>Model, equations & assumptions</summary><p>This is a bounded exponential surrogate, not a Darcy-law or cake-resistance model. Solids concentration is mass based. All solids remain in the cake, water density is 1,000 kg/m³, and there is no evaporation, leakage or dissolution.</p>
+<pre>dry_solids = batch_kg × solids_pct / 100
+initial_water = batch_kg − dry_solids
+removable_water = max(0, initial_water − 0.35 × dry_solids)
+tau_min = 18 × (solids_pct / 30)^1.5 × (batch_kg / 1000)^0.5
+recovered_water = removable_water × [1 − exp(−time_min × sqrt(pressure_bar) / tau_min)]
+cake_water = initial_water − recovered_water
+recovery_pct = 100 × recovered_water / initial_water
+moisture_pct = 100 × cake_water / (dry_solids + cake_water)
+energy_kWh = pressure_bar × 100000 × (recovered_water / 1000) / (0.60 × 3600000)
+             + 0.25 × time_min / 60</pre>
+<p>The 0.35 kg/kg water floor, 18-minute coefficient and concentration/loading exponents are invented. Fixed filter area is assumed. Energy assumes 60% hydraulic efficiency and 0.25 kW auxiliary power. It excludes feed/cake pressurization, compressed air and upstream/downstream energy.</p><p>Pressure-dependent cake compression, permeability, particle size, temperature, chemistry and water reuse quality are excluded. No calibration data or uncertainty intervals are available. “Optimal” means best within the chosen grid and score only.</p><p><strong>Next validation step:</strong> measure filtrate mass, cake moisture, pressure, runtime, filter area and actual electricity. Fit parameters and evaluate held-out batches.</p></details>
+<footer>RedMudAI · Presentation MVP · Every result is illustrative and unvalidated</footer>
+</main><script src="model.js"></script><script src="app.js"></script></body></html>
